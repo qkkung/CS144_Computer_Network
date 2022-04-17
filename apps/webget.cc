@@ -6,6 +6,17 @@
 
 using namespace std;
 
+bool isIp(const string& host) {
+    for (char c : host) {
+        if ((c >= '0' && c <= '9') || c == '.') {
+            continue;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
 void get_URL(const string &host, const string &path) {
     // Your code here.
 
@@ -16,9 +27,16 @@ void get_URL(const string &host, const string &path) {
     // Then you'll need to print out everything the server sends back,
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
-
-    cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
-    cerr << "Warning: get_URL() has not been implemented yet.\n";
+    TCPSocket client;
+    client.connect(Address(host, "http"));
+    string send = "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
+    //cout << send << endl; // if this line is included, test will fail
+    client.write(send);
+    string recvd;
+    while (!client.eof()) {
+        cout << client.read();
+    }
+    client.close();
 }
 
 int main(int argc, char *argv[]) {
