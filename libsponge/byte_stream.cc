@@ -36,7 +36,7 @@ string ByteStream::peek_output(const size_t len) const {
     int peek = std::min(len, _buffer.size());
     //std::string output;
     //output.append(&(_buffer.front()), peek);
-    std::cout << "_buffer:" << _buffer.size() << " len:" << len << " peek:" << peek << " " << _buffer.back() << std::endl;
+    //std::cout << "_buffer:" << _buffer.size() << " len:" << len << " peek:" << peek << " " << _buffer.back() << std::endl;
     return string().assign(_buffer.begin(), _buffer.begin() + peek);
 }
 
