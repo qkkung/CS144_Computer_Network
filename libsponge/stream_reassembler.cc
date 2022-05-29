@@ -165,21 +165,6 @@ void StreamReassembler::store_unassembled_data(const std::string& data,
     return;
 }
 
-bool StreamReassembler::need_rollback() {
-    if (_insert_index + _unassembled_size > _capacity) {
-        return true;
-    }
-    return false;
-}
-
-void StreamReassembler::unassembled_to_string() {
-    cout << "unassembled_to_string:";
-    for (auto it = _unassembled_data.begin(); it != _unassembled_data.end(); it++) {
-        cout << it->first << ":" << it->second->get_data().size() << "  ";
-    }
-    cout << endl << endl;
-}
-
 // inner class Substring functions
 StreamReassembler::Substring::Substring(std::string data, bool eof) : _data(data), _eof(eof) {}
 

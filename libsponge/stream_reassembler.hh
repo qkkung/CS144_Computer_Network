@@ -31,9 +31,6 @@ class StreamReassembler {
                                 size_t index,
                                 bool eof);
 
-    bool need_rollback();
-    void unassembled_to_string();
-
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
     //! \note This capacity limits both the bytes that have been reassembled,
@@ -66,9 +63,6 @@ class StreamReassembler {
     //! \brief Is the internal state empty (other than the output stream)?
     //! \returns `true` if no substrings are waiting to be assembled
     bool empty() const;
-
-    std::map<size_t, size_t> new_unassembled_data =
-        {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0}, {20, 0}};
 
     class Substring {
       private:
