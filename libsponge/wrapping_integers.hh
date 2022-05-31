@@ -17,6 +17,8 @@ class WrappingInt32 {
     uint32_t raw_value() const { return _raw_value; }  //!< Access raw stored value
 };
 
+const uint64_t module = 1ul << 32;
+
 //! Transform a 64-bit absolute sequence number (zero-indexed) into a 32-bit relative sequence number
 //! \param n the absolute sequence number
 //! \param isn the initial sequence number
@@ -60,6 +62,9 @@ inline WrappingInt32 operator+(WrappingInt32 a, uint32_t b) { return WrappingInt
 
 //! \brief The point `b` steps before `a`.
 inline WrappingInt32 operator-(WrappingInt32 a, uint32_t b) { return a + -b; }
+
+//! \brief Whether a is greater than or equal to b.
+inline bool operator>=(WrappingInt32 a, WrappingInt32 b) { return a.raw_value() >= b.raw_value(); }
 //!@}
 
 #endif  // SPONGE_LIBSPONGE_WRAPPING_INTEGERS_HH

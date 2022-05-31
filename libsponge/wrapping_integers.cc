@@ -1,4 +1,5 @@
 #include "wrapping_integers.hh"
+#include <iostream>
 
 // Dummy implementation of a 32-bit wrapping integer
 
@@ -14,8 +15,8 @@ using namespace std;
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
 WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    DUMMY_CODE(n, isn);
-    return WrappingInt32{0};
+    unsigned int wrap_sn = (isn.raw_value() + n) % module;
+    return WrappingInt32{wrap_sn};
 }
 
 //! Transform a WrappingInt32 into an "absolute" 64-bit sequence number (zero-indexed)
@@ -29,6 +30,23 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! and the other stream runs from the remote TCPSender to the local TCPReceiver and
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
-    DUMMY_CODE(n, isn, checkpoint);
-    return {};
+    uint64_t offset = (n >= isn) ? static_cast<unsigned int>(n - isn) : (module - static_cast<unsigned int>(isn - n));
+    uint64_t loop_num = checkpoint / module;
+
+    uint64_t x = loop_num * module + offset;
+    uint64_t y = x + module;
+    uint64_t min_distance = x > checkpoint ? x - checkpoint : checkpoint - x;
+    uint64_t abs_sn = x;
+    if (y - checkpoint < min_distance) {
+        abs_sn = y;
+        min_distance = y - checkpoint;
+    }
+    if (loop_num > 0) {
+        uint64_t z = x - module;
+        if (checkpoint - z < min_distance) {
+            abs_sn = z;
+        }
+    }
+    
+    return abs_sn;
 }

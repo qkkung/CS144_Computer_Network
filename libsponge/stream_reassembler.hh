@@ -51,7 +51,6 @@ class StreamReassembler {
     //!@{
     const ByteStream &stream_out() const { return _output; }
     ByteStream &stream_out() { return _output; }
-    std::map<size_t, std::shared_ptr<Substring>> &get_unassembled_data() { return _unassembled_data; };
     //!@}
 
     //! The number of bytes in the substrings stored but not yet reassembled

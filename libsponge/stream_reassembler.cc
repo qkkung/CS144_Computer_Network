@@ -20,13 +20,9 @@ StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity),
 //! contiguous substrings and writes them into the output stream in order.
 void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
     // if memory is full, don't store any more data
-    if (_capacity == _output.buffer_size()) {
+    if (_capacity == _output.buffer_size() || _output.input_ended()) {
         return;
     }
-
-    // define two variables preparing for rollback
-    size_t new_insert_count = 0;
-
 
     if (index > _insert_index){
         store_unassembled_data(data, index, eof);
@@ -35,10 +31,8 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
 
     if (index == _insert_index) {
         directly_put_data(data, eof);
-        new_insert_count += data.size();
     }else if (index + data.size() > _insert_index) {
         directly_put_data(data.substr(_insert_index - index), eof);
-        new_insert_count += index + data.size() - _insert_index;
     }
     put_unassembled_data();
     return;
