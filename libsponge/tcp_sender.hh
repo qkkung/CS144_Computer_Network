@@ -8,6 +8,43 @@
 
 #include <functional>
 #include <queue>
+#include <optional>
+
+class TCPRetransmission {
+  private:
+    // record amount of time for restransmission
+    unsigned int _time_amount{0};
+
+    // retransmission queue
+    std::queue<std::pair<uint64_t, TCPSegment>> _rt_queue{};
+
+    // retransmission timeout
+    unsigned int _rto{};
+
+    // the count for consecutive retransmission
+    unsigned int _count_rt{0};
+
+  public:
+
+    // TCPRetransmission(unsigned int _initial_retransmission_timeout)
+    //    : _time_amount(0), _rto(_initial_retransmission_timeout), _count_rt(0) {}
+
+    unsigned int &time_amount() { return _time_amount; }
+
+    bool is_timeout() { return _time_amount >= _rto; }
+
+    std::queue<std::pair<uint64_t, TCPSegment>> &rt_queue() { return _rt_queue; }
+
+    unsigned int &rto() { return _rto; }
+
+    unsigned int &count_rt() { return _count_rt; }
+
+    unsigned int get_count_rt() const { return _count_rt; }
+
+    void remove_retransmission_entry(uint64_t ackno_absolute);
+
+    void deal_retransmission_entry(uint64_t ackno_absolute, uint64_t max_seqno_abs, unsigned int initial_timeout);
+};
 
 //! \brief The "sender" part of a TCP implementation.
 
@@ -31,6 +68,17 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    // have received max acknowledgement sequence number until now
+    uint64_t _max_ackno_abs{0};
+
+    //! the right edge of sequence number, which is not included, in the receiver's window
+    uint16_t _window_size{0};
+
+    TCPRetransmission _rt{};
+
+    //! has there been a segment sent when window size is zero
+    bool _sent_flag_win_zero{false};
 
   public:
     //! Initialize a TCPSender
@@ -88,5 +136,6 @@ class TCPSender {
     WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
     //!@}
 };
+
 
 #endif  // SPONGE_LIBSPONGE_TCP_SENDER_HH
