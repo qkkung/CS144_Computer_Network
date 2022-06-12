@@ -1,4 +1,5 @@
 #include "tcp_receiver.hh"
+#include <iostream>
 
 // Dummy implementation of a TCP receiver
 
@@ -22,7 +23,8 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     }
     uint64_t abs_sn = unwrap(seg.header().seqno, _isn.value(), stream_out().bytes_written());
     // if it isn't the first segment where SYN flag is set, absolute sequence number must be greater than zero
-    if (abs_sn > 0) {
+    size_t written = stream_out().bytes_written();
+    if (abs_sn > written - (_capacity - window_size()) && abs_sn <= written + window_size()) {
         _reassembler.push_substring(seg.payload().copy(), abs_sn - 1, seg.header().fin);
     }
 }

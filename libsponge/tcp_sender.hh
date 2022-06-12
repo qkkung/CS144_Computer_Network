@@ -31,6 +31,8 @@ class TCPRetransmission {
 
     unsigned int &time_amount() { return _time_amount; }
 
+    const unsigned int &time_amount_const() const { return _time_amount; }
+
     bool is_timeout() { return _time_amount >= _rto; }
 
     std::queue<std::pair<uint64_t, TCPSegment>> &rt_queue() { return _rt_queue; }
@@ -134,6 +136,12 @@ class TCPSender {
 
     //! \brief relative seqno for the next byte to be sent
     WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
+
+    //! \brief return TCPRetransmission
+    const TCPRetransmission &get_rt() const { return _rt; }
+
+    size_t rt_queue_size() { return _rt.rt_queue().size(); }
+
     //!@}
 };
 

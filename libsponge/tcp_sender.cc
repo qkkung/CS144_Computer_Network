@@ -67,11 +67,14 @@ void TCPSender::fill_window() {
                 need_send = true;
             }
         }
+        //cout << "right_edge:" << _right_edge_seqno << " stream_in eof:" << stream_in().eof()
+        //     << " input_end:" << stream_in().input_ended()
+        //     << " stream+2:" << (stream_in().bytes_written() + 2) << endl;
         // outgoing stream reach end
         if (_right_edge_seqno > _next_seqno 
-            && stream_in().eof() 
+            && stream_in().eof()
             && next_seqno_absolute() < stream_in().bytes_written() + 2) {
-
+            //cout << "has sent fin" << endl;
             tcp_segment.header().fin = true;
             _next_seqno += 1;
             need_send = true;
@@ -80,6 +83,9 @@ void TCPSender::fill_window() {
         if (need_send) {
             segments_out().push(tcp_segment);
             _rt.rt_queue().push({seqno_abs, tcp_segment});
+            if (_rt.rt_queue().size() == 1) {
+                _rt.time_amount() = 0;
+            }
             need_send = false;
         }
     } while (next_seqno_absolute() < _max_ackno_abs + _window_size
@@ -91,6 +97,7 @@ void TCPSender::fill_window() {
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) { 
     uint64_t ackno_abs = unwrap(ackno, _isn, _next_seqno);
     if (ackno_abs > next_seqno_absolute()) {
+        //cout << "sender ack_received return directly" << endl;
         return;
     }
     if (ackno_abs > _max_ackno_abs) {
