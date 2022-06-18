@@ -7,6 +7,8 @@
 
 #include <optional>
 #include <queue>
+#include <map>
+#include <array>
 
 //! \brief A "network interface" that connects IP (the internet layer, or network layer)
 //! with Ethernet (the network access layer, or link layer).
@@ -40,12 +42,33 @@ class NetworkInterface {
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
 
+    //! cache the mapping between ip and the pair of address of the interface and timer
+    std::map<uint32_t, std::pair<EthernetAddress, size_t>> _ip_to_ethernet{};
+
+    //! given next hop ip, if could not find out ethernet address in _ip_to_ethernet, then put into _ip_to_datagram
+    std::map<uint32_t, std::queue<InternetDatagram>> _ip_to_datagram{};
+
+    //! count down the time after sending ARP request corresponding to the IP
+    std::map<uint32_t, size_t> _timer{};
+
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
     NetworkInterface(const EthernetAddress &ethernet_address, const Address &ip_address);
 
     //! \brief Access queue of Ethernet frames awaiting transmission
     std::queue<EthernetFrame> &frames_out() { return _frames_out; }
+
+    std::map<uint32_t, std::pair<EthernetAddress, size_t>> &ip_to_ethernet() { return _ip_to_ethernet; }
+
+    std::map<uint32_t, std::queue<InternetDatagram>> &ip_to_datagram() { return _ip_to_datagram; }
+
+    std::map<uint32_t, size_t> &timer() { return _timer; }
+
+    void send_frame(EthernetAddress address, BufferList &buffer_list, uint16_t type);
+
+    void send_arp_frame(uint32_t target_ip, EthernetAddress e_addr, bool broadcast);
+
+    bool compare_array(const EthernetAddress &left, const EthernetAddress &right);
 
     //! \brief Sends an IPv4 datagram, encapsulated in an Ethernet frame (if it knows the Ethernet destination address).
 
