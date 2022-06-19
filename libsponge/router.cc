@@ -14,9 +14,7 @@ using namespace std;
 // automated checks run by `make check_lab6`.
 
 // You will need to add private members to the class declaration in `router.hh`
-
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
+int mask = 1 << 31;
 
 //! \param[in] route_prefix The "up-to-32-bit" IPv4 address prefix to match the datagram's destination address against
 //! \param[in] prefix_length For this route to be applicable, how many high-order (most-significant) bits of the route_prefix will need to match the corresponding bits of the datagram's destination address?
@@ -29,14 +27,46 @@ void Router::add_route(const uint32_t route_prefix,
     cerr << "DEBUG: adding route " << Address::from_ipv4_numeric(route_prefix).ip() << "/" << int(prefix_length)
          << " => " << (next_hop.has_value() ? next_hop->ip() : "(direct)") << " on interface " << interface_num << "\n";
 
-    DUMMY_CODE(route_prefix, prefix_length, next_hop, interface_num);
-    // Your code here.
+    Router::route_entry r;
+    r.route_prefix = route_prefix;
+    r.prefix_length = prefix_length;
+    if (next_hop.has_value()) {
+        r.next_hop = next_hop.value();
+        r.direct = false;
+    }
+    r.interface_num = interface_num;
+    _route_table.push_back(r);
 }
 
 //! \param[in] dgram The datagram to be routed
-void Router::route_one_datagram(InternetDatagram &dgram) {
-    DUMMY_CODE(dgram);
-    // Your code here.
+void Router::route_one_datagram(InternetDatagram &dgram) { 
+    size_t select_index;
+    bool exist = false;
+    uint32_t dst = dgram.header().dst;
+    for (uint32_t i = 0; i < _route_table.size(); i++) {
+        if (_route_table[i].prefix_length == 0 && !exist) {
+            select_index = i;
+            exist = true;
+            continue;
+        }
+        int new_mask = mask >> (_route_table[i].prefix_length - 1);
+        if ((new_mask & dst) == _route_table[i].route_prefix 
+            && (!exist || (exist && _route_table[i].prefix_length > _route_table[select_index].prefix_length))) {
+            select_index = i;
+            exist = true;
+        }
+    }
+    if (exist && dgram.header().ttl > 1) {
+        dgram.header().ttl -= 1;
+        if (_route_table[select_index].direct) {
+            _interfaces[_route_table[select_index].interface_num]
+                .send_datagram(dgram, Address::from_ipv4_numeric(dst));
+        } else {
+            _interfaces[_route_table[select_index].interface_num]
+                .send_datagram(dgram, _route_table[select_index].next_hop);
+        }
+
+    }
 }
 
 void Router::route() {
